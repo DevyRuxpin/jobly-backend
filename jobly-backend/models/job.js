@@ -1,52 +1,72 @@
 const { Model, DataTypes } = require('sequelize');
+const { sequelize } = require('../models');
 
-module.exports = (sequelize) => {
-  class Job extends Model {
-    static associate(models) {
-      Job.belongsTo(models.Company, {
-        foreignKey: 'companyId',
-        as: 'company',
-      });
-      Job.belongsToMany(models.User, {
-        through: models.Application,
-        foreignKey: 'jobId',
-        otherKey: 'userId',
-      });
-    }
+class Job extends Model {
+  static async search(title) {
+    return await this.findAll({
+      where: {
+        title: {
+          [sequelize.Op.iLike]: `%${title}%`
+        }
+      },
+      order: [['title', 'ASC']],
+      limit: 50, // Prevent excessive results
+      include: [{
+        model: sequelize.models.Company,
+        attributes: ['handle', 'name', 'logo_url']
+      }]
+    });
   }
+}
 
-  Job.init(
-    {
-      title: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      salary: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      equity: {
-        type: DataTypes.FLOAT,
-        allowNull: true,
-        validate: {
-          min: 0,
-          max: 1,
-        },
-      },
-      companyId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'Companies',
-          key: 'id',
-        },
-      },
+Job.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
-    {
-      sequelize,
-      modelName: 'Job',
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    salary: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    equity: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 1
+      }
+    },
+    company_handle: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: 'companies',
+        key: 'handle'
+      }
     }
-  );
+  },
+  {
+    sequelize,
+    modelName: 'Job',
+    tableName: 'jobs',
+    indexes: [
+      {
+        name: 'job_title_idx',
+        fields: ['title']
+      },
+      {
+        name: 'job_company_handle_idx',
+        fields: ['company_handle']
+      }
+    ],
+    timestamps: false
+  }
+);
 
-  return Job;
-}; 
+module.exports = Job; 

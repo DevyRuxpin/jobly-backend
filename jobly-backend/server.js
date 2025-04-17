@@ -14,6 +14,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy' });
+});
+
 // Routes
 app.use('/', routes);
 
@@ -38,11 +43,24 @@ async function startServer() {
     
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
+      // Log health check URL
+      console.log(`Health check available at: http://localhost:${PORT}/health`);
     });
   } catch (error) {
     console.error('Unable to start server:', error);
     process.exit(1);
   }
 }
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Promise Rejection:', err);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
 
 startServer(); 
