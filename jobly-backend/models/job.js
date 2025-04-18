@@ -2,19 +2,19 @@ const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
   class Job extends Model {
-    static async search(title) {
-      return await this.findAll({
+    static async search(searchTerm) {
+      if (!searchTerm) {
+        return this.findAll({
+          order: [['title', 'ASC']],
+          limit: 50
+        });
+      }
+      return this.findAll({
         where: {
-          title: {
-            [sequelize.Sequelize.Op.iLike]: `%${title}%`
-          }
+          title: sequelize.Sequelize.Op.iLike(`%${searchTerm}%`)
         },
         order: [['title', 'ASC']],
-        limit: 50, // Prevent excessive results
-        include: [{
-          model: sequelize.models.Company,
-          attributes: ['handle', 'name', 'logo_url']
-        }]
+        limit: 50
       });
     }
   }
@@ -35,7 +35,7 @@ module.exports = (sequelize) => {
         allowNull: true
       },
       equity: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(4, 3),
         allowNull: true,
         validate: {
           min: 0,
@@ -55,16 +55,6 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: 'Job',
       tableName: 'jobs',
-      indexes: [
-        {
-          name: 'job_title_idx',
-          fields: ['title']
-        },
-        {
-          name: 'job_company_handle_idx',
-          fields: ['company_handle']
-        }
-      ],
       timestamps: false
     }
   );

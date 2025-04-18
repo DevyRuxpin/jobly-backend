@@ -2,15 +2,19 @@ const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
   class Company extends Model {
-    static async search(name) {
-      return await this.findAll({
+    static async search(searchTerm) {
+      if (!searchTerm) {
+        return this.findAll({
+          order: [['name', 'ASC']],
+          limit: 50
+        });
+      }
+      return this.findAll({
         where: {
-          name: {
-            [sequelize.Sequelize.Op.iLike]: `%${name}%`
-          }
+          name: sequelize.Sequelize.Op.iLike(`%${searchTerm}%`)
         },
         order: [['name', 'ASC']],
-        limit: 20 // Prevent excessive results
+        limit: 50
       });
     }
   }
@@ -25,8 +29,7 @@ module.exports = (sequelize) => {
       },
       name: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       num_employees: {
         type: DataTypes.INTEGER,
@@ -45,16 +48,6 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: 'Company',
       tableName: 'companies',
-      indexes: [
-        {
-          name: 'company_name_idx',
-          fields: ['name']
-        },
-        {
-          name: 'company_handle_idx',
-          fields: ['handle']
-        }
-      ],
       timestamps: false
     }
   );

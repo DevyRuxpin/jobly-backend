@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 module.exports = (sequelize) => {
   class User extends Model {
@@ -13,7 +13,7 @@ module.exports = (sequelize) => {
 
     static async authenticate(username, password) {
       const user = await this.findOne({ where: { username } });
-      if (user && (await bcrypt.compare(password, user.password))) {
+      if (user && await bcrypt.compare(password, user.password)) {
         return user;
       }
       return null;
@@ -24,23 +24,33 @@ module.exports = (sequelize) => {
     {
       username: {
         type: DataTypes.STRING,
+        primaryKey: true,
         allowNull: false,
         unique: true,
         validate: {
-          len: [3, 30],
-        },
+          len: [1, 30]
+        }
       },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          len: [5, 100]
+        }
       },
-      firstName: {
+      first_name: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          len: [1, 30]
+        }
       },
-      lastName: {
+      last_name: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          len: [1, 30]
+        }
       },
       email: {
         type: DataTypes.STRING,
@@ -48,17 +58,27 @@ module.exports = (sequelize) => {
         unique: true,
         validate: {
           isEmail: true,
-        },
+          len: [3, 100]
+        }
       },
-      isAdmin: {
+      photo_url: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+          isUrl: true
+        }
+      },
+      is_admin: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false,
-      },
+        defaultValue: false
+      }
     },
     {
       sequelize,
       modelName: 'User',
+      tableName: 'users',
+      timestamps: false,
       hooks: {
         beforeCreate: async (user) => {
           if (user.password) {
@@ -69,8 +89,8 @@ module.exports = (sequelize) => {
           if (user.changed('password')) {
             user.password = await bcrypt.hash(user.password, 10);
           }
-        },
-      },
+        }
+      }
     }
   );
 

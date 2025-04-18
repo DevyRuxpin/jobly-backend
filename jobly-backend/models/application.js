@@ -1,45 +1,32 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Application extends Model {
-    static associate(models) {
-      Application.belongsTo(models.User, {
-        foreignKey: 'userId',
-      });
-      Application.belongsTo(models.Job, {
-        foreignKey: 'jobId',
-      });
-    }
-  }
+  class Application extends Model {}
 
   Application.init(
     {
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
+      username: {
+        type: DataTypes.STRING,
+        primaryKey: true,
         references: {
-          model: 'Users',
-          key: 'id',
-        },
+          model: 'users',
+          key: 'username'
+        }
       },
-      jobId: {
+      job_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        primaryKey: true,
         references: {
-          model: 'Jobs',
-          key: 'id',
-        },
-      },
+          model: 'jobs',
+          key: 'id'
+        }
+      }
     },
     {
       sequelize,
       modelName: 'Application',
-      indexes: [
-        {
-          unique: true,
-          fields: ['userId', 'jobId'],
-        },
-      ],
+      tableName: 'applications',
+      timestamps: false
     }
   );
 
